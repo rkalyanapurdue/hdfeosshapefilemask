@@ -26,5 +26,5 @@ jobs:
           fetch-depth: 0
       - name: Build Plugin
         id: build-plugin
-        uses: rkalyanapurdue/build-geoedf-plugin-docker-action@v1
+        uses: rkalyanapurdue/build-geoedf-plugin-docker-action@v2
       
