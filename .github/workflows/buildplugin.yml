@@ -58,7 +58,7 @@ jobs:
         SINGULARITY_RECIPE: Singularity
         OUTPUT_CONTAINER: container.sif
       run: |
-       pip3 install hpccm
+       python3 -m pip install hpccm
        which hpccm
        if [ -f "${HPCCM_RECIPE}" ]; then
             /usr/local/bin/hpccm --recipe ${HPCCM_RECIPE} --format singularity --singularity-version=3.2 > ${SINGULARITY_RECIPE}
