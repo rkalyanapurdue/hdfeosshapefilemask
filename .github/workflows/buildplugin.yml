@@ -1,30 +1,67 @@
-# This is a basic workflow to help you get started with Actions
-
-name: buildplugin
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+name: Singularity Build
+on: [push]
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
     steps:
-      - name: Checkout Repo
-        id: checkout-repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Build Plugin
-        id: build-plugin
-        uses: rkalyanapurdue/build-geoedf-plugin-docker-action@v2
-      
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update && sudo apt-get install -y \
+          build-essential \
+          libssl-dev \
+          uuid-dev \
+          libgpgme11-dev \
+          squashfs-tools \
+          libseccomp-dev \
+          pkg-config \
+          python-dev python3 python3-pip
+
+    - name: Install Singularity
+      env:
+        SINGULARITY_VERSION: 3.2.1
+      run: |
+        export GOPATH=/tmp/go
+        mkdir -p $GOPATH
+        sudo mkdir -p /usr/local/var/singularity/mnt && \
+        mkdir -p $GOPATH/src/github.com/sylabs && \
+        cd $GOPATH/src/github.com/sylabs && \
+        wget -qO- https://github.com/sylabs/singularity/releases/download/v${SINGULARITY_VERSION}/singularity-${SINGULARITY_VERSION}.tar.gz | \
+        tar xzv && \
+        cd singularity && \
+        ./mconfig -p /usr/local && \
+        make -C builddir && \
+        sudo make -C builddir install          
+
+    - name: Install hpccm
+      run: pip3 install hpccm
+          
+    - name: Check out code for the container build
+      uses: actions/checkout@v2
+
+    - name: Build Container
+      env:
+        HPCCM_RECIPE: recipe.hpccm
+        SINGULARITY_RECIPE: Singularity
+        OUTPUT_CONTAINER: container.sif
+      run: |
+       if [ -f "${HPCCM_RECIPE}" ]; then
+            hpccm --recipe ${HPCCM_RECIPE} --format singularity --singularity-version=3.2 > ${SINGULARITY_RECIPE}
+       else
+          echo "${HPCCM_RECIPE} not found."
+       fi
+       if [ -f "${SINGULARITY_RECIPE}" ]; then
+            sudo -E singularity build ${OUTPUT_CONTAINER} ${SINGULARITY_RECIPE}
+       else
+           echo "${SINGULARITY_RECIPE} is not found."
+           echo "Present working directory: $PWD"
+           ls
+       fi
