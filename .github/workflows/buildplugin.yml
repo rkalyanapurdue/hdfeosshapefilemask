@@ -45,9 +45,6 @@ jobs:
         make -C builddir && \
         sudo make -C builddir install          
 
-    - name: Install hpccm
-      run: pip3 install hpccm
-          
     - name: Check out code for the container build
       uses: actions/checkout@v2
 
@@ -57,6 +54,7 @@ jobs:
         SINGULARITY_RECIPE: Singularity
         OUTPUT_CONTAINER: container.sif
       run: |
+       pip3 install hpccm
        if [ -f "${HPCCM_RECIPE}" ]; then
             /usr/local/bin/hpccm --recipe ${HPCCM_RECIPE} --format singularity --singularity-version=3.2 > ${SINGULARITY_RECIPE}
        else
