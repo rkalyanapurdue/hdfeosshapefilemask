@@ -58,7 +58,7 @@ jobs:
         OUTPUT_CONTAINER: container.sif
       run: |
        if [ -f "${HPCCM_RECIPE}" ]; then
-            hpccm --recipe ${HPCCM_RECIPE} --format singularity --singularity-version=3.2 > ${SINGULARITY_RECIPE}
+            /usr/local/bin/hpccm --recipe ${HPCCM_RECIPE} --format singularity --singularity-version=3.2 > ${SINGULARITY_RECIPE}
        else
           echo "${HPCCM_RECIPE} not found."
        fi
