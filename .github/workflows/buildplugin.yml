@@ -1,4 +1,4 @@
-name: Singularity Build
+name: Build Singularity container for Plugin
 on: [push]
 jobs:
 
@@ -50,7 +50,6 @@ jobs:
     - name: Install hpccm
       run: |
         python3 -m pip install hpccm
-        which hpccm
 
     - name: Check out code for the container build
       uses: actions/checkout@v2
@@ -64,12 +63,10 @@ jobs:
        if [ -f "${HPCCM_RECIPE}" ]; then
             hpccm --recipe ${HPCCM_RECIPE} --format singularity --singularity-version=3.2 > ${SINGULARITY_RECIPE}
        else
-          echo "${HPCCM_RECIPE} not found."
+          echo "Container recipe ${HPCCM_RECIPE} not found."
        fi
        if [ -f "${SINGULARITY_RECIPE}" ]; then
             sudo -E singularity build ${OUTPUT_CONTAINER} ${SINGULARITY_RECIPE}
        else
-           echo "${SINGULARITY_RECIPE} is not found."
-           echo "Present working directory: $PWD"
-           ls
+           echo "Singularity recipe ${SINGULARITY_RECIPE} was not created."
        fi
